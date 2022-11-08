@@ -36,23 +36,22 @@ public class YahooService {
 
         Stock stock = YahooFinance.get(ticker, from, to, Interval.MONTHLY);
         List<HistoricalQuote> history = stock.getHistory();
-        List<Integer> counts = new ArrayList<>();
+        int totalBoughtStocksCount = 0;
         BigDecimal originalBigDecimal = new BigDecimal("2000.00");
         BigDecimal amountToSpend = originalBigDecimal;
         List<Transaction> transactions = new ArrayList<>();
 
         for (HistoricalQuote historicalQuote : history) {
             int stocksCount = amountToSpend.divide(historicalQuote.getClose(), RoundingMode.DOWN).intValue();
+            totalBoughtStocksCount += stocksCount;
             BigDecimal spent = BigDecimal.valueOf(stocksCount).multiply(historicalQuote.getClose());
 
             amountToSpend = amountToSpend.subtract(spent).add(originalBigDecimal);
-            counts.add(stocksCount);
             LocalDate localDate = LocalDateTime.ofInstant(historicalQuote.getDate().toInstant(), UTC).toLocalDate();
             transactions.add(new Transaction(spent.doubleValue(), localDate));
         }
 
-        Integer totalSumOfStocksCount = counts.stream().reduce(0, Integer::sum);
-        double totalValue = BigDecimal.valueOf(totalSumOfStocksCount).multiply(history.get(history.size() - 1).getClose().negate()).doubleValue();
+        double totalValue = BigDecimal.valueOf(totalBoughtStocksCount).multiply(history.get(history.size() - 1).getClose().negate()).doubleValue();
         transactions.add(new Transaction(totalValue, LocalDate.now()));
 
         Xirr xirr = new Xirr(transactions);
