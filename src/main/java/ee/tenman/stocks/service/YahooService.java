@@ -51,7 +51,8 @@ public class YahooService {
             transactions.add(new Transaction(spent.doubleValue(), localDate));
         }
 
-        double totalValue = BigDecimal.valueOf(totalBoughtStocksCount).multiply(history.get(history.size() - 1).getClose().negate()).doubleValue();
+        BigDecimal lastPrice = history.get(history.size() - 1).getClose();
+        double totalValue = BigDecimal.valueOf(totalBoughtStocksCount).negate().multiply(lastPrice).doubleValue();
         transactions.add(new Transaction(totalValue, LocalDate.now()));
 
         Xirr xirr = new Xirr(transactions);
