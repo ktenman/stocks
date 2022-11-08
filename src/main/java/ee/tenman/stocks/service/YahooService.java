@@ -39,7 +39,6 @@ public class YahooService {
         List<Integer> counts = new ArrayList<>();
         BigDecimal originalBigDecimal = new BigDecimal("2000.00");
         BigDecimal amountToSpend = originalBigDecimal;
-        HistoricalQuote last = null;
         List<Transaction> transactions = new ArrayList<>();
 
         for (HistoricalQuote historicalQuote : history) {
@@ -48,13 +47,12 @@ public class YahooService {
 
             amountToSpend = amountToSpend.subtract(spent).add(originalBigDecimal);
             counts.add(stocksCount);
-
-            Calendar date = historicalQuote.getDate();
-            transactions.add(new Transaction(spent.doubleValue(), LocalDateTime.ofInstant(date.toInstant(), UTC).toLocalDate()));
-            last = historicalQuote;
+            LocalDate localDate = LocalDateTime.ofInstant(historicalQuote.getDate().toInstant(), UTC).toLocalDate();
+            transactions.add(new Transaction(spent.doubleValue(), localDate));
         }
+
         Integer totalSumOfStocksCount = counts.stream().reduce(0, Integer::sum);
-        double totalValue = BigDecimal.valueOf(totalSumOfStocksCount).multiply(last.getClose().negate()).doubleValue();
+        double totalValue = BigDecimal.valueOf(totalSumOfStocksCount).multiply(history.get(history.size() - 1).getClose().negate()).doubleValue();
         transactions.add(new Transaction(totalValue, LocalDate.now()));
 
         Xirr xirr = new Xirr(transactions);
